@@ -1,11 +1,10 @@
 """TFX fraud pipeline definition."""
 
-from typing import Any, Dict, List, Optional, Text
+from typing import List, Optional, Text
 
 import tensorflow_model_analysis as tfma
-from tfx import v1 as tfx
-
 from ml_metadata.proto import metadata_store_pb2
+from tfx import v1 as tfx
 
 
 def create_pipeline(
@@ -53,7 +52,7 @@ def create_pipeline(
     # Uses user-provided Python function that implements a model using TF-Learn.
     trainer_args = {
         'run_fn': run_fn,
-        'transformed_examples': transform.outputs['transformed_examples'],
+        'examples': transform.outputs['transformed_examples'],
         'schema': schema_gen.outputs['schema'],
         'transform_graph': transform.outputs['transform_graph'],
         'train_args': train_args,
@@ -87,7 +86,7 @@ def create_pipeline(
     evaluator = tfx.components.Evaluator(
         examples=example_gen.outputs['examples'],
         model=trainer.outputs['model'],
-        baseline_model=model_resolver.outputs['model'],
+        baseline_model=None,
         eval_config=eval_config)
     components.append(evaluator)
 
@@ -104,9 +103,6 @@ def create_pipeline(
         pipeline_name=pipeline_name,
         pipeline_root=pipeline_root,
         components=components,
-        # Change this value to control caching of execution results. Default value
-        # is `False`.
-        # enable_cache=True,
         metadata_connection_config=metadata_connection_config,
         beam_pipeline_args=beam_pipeline_args,
     )

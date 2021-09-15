@@ -6,7 +6,7 @@ This file defines environments for a TFX taxi pipeline.
 import os  # pylint: disable=unused-import
 
 # Where pipeline temp outputs get stored
-OUTPUT_DIR = '/Documents/dev/learn/tfx/pipeline_outputs'
+OUTPUT_DIR = 'Users/ivan/Documents/dev/learn/tfx/pipeline_outputs'
 
 # Pipeline name will be used to identify this pipeline.
 PIPELINE_NAME = 'fraud'

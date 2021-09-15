@@ -126,8 +126,7 @@ def _build_keras_model(hidden_units, learning_rate):
     return model
 
 
-def _wide_and_deep_classifier(wide_columns, deep_columns, dnn_hidden_units,
-                              learning_rate):
+def _wide_and_deep_classifier(wide_columns, deep_columns, dnn_hidden_units, learning_rate):
     """Build a simple keras wide and deep model.
       Args:
         wide_columns: Feature columns wrapped in indicator_column for wide (linear)
