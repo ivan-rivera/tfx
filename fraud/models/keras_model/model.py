@@ -4,12 +4,12 @@ A DNN keras model which uses features defined in features.py and network
 parameters defined in constants.py.
 """
 
+import configs
 from absl import logging
 import tensorflow as tf
 import tensorflow_transform as tft
 
-from fraud.models import features
-from fraud.models.keras_model import constants
+from models import features
 from tfx_bsl.public import tfxio
 
 
@@ -23,7 +23,7 @@ def _get_tf_examples_serving_signature(model, tf_transform_output):
         """Returns the output to be used in the serving signature."""
         raw_feature_spec = tf_transform_output.raw_feature_spec()
         # Remove label feature since these will not be present at serving time.
-        raw_feature_spec.pop(features.LABEL_KEY)
+        raw_feature_spec.pop(configs.LABEL_KEY)
         raw_features = tf.io.parse_example(serialized_tf_example, raw_feature_spec)
         transformed_features = model.tft_layer_inference(raw_features)
         logging.info('serve_transformed_features = %s', transformed_features)
@@ -65,7 +65,7 @@ def _input_fn(file_pattern, data_accessor, tf_transform_output, batch_size=200):
         file_pattern,
         tfxio.TensorFlowDatasetOptions(
             batch_size=batch_size,
-            label_key=features.transformed_name(features.LABEL_KEY)
+            label_key=features.transformed_name(configs.LABEL_KEY)
         ),
         tf_transform_output.transformed_metadata.schema
     ).repeat()
@@ -81,15 +81,15 @@ def _build_keras_model(hidden_units, learning_rate):
     """
     real_valued_columns = [
         tf.feature_column.numeric_column(key, shape=())
-        for key in features.transformed_names(features.DENSE_FLOAT_FEATURE_KEYS)
+        for key in features.transformed_names(configs.DENSE_FLOAT_FEATURE_KEYS)
     ]
     categorical_columns = [
         tf.feature_column.categorical_column_with_identity(  # pylint: disable=g-complex-comprehension
             key,
-            num_buckets=features.VOCAB_SIZE + features.OOV_SIZE,
+            num_buckets=configs.VOCAB_SIZE + configs.OOV_SIZE,
             default_value=0
         )
-        for key in features.transformed_names(features.VOCAB_FEATURE_KEYS)
+        for key in features.transformed_names(configs.VOCAB_FEATURE_KEYS)
     ]
     categorical_columns += [
         tf.feature_column.categorical_column_with_identity(  # pylint: disable=g-complex-comprehension
@@ -98,8 +98,8 @@ def _build_keras_model(hidden_units, learning_rate):
             default_value=0
         )
         for key, num_buckets in zip(
-            features.transformed_names(features.BUCKET_FEATURE_KEYS),
-            features.BUCKET_FEATURE_BUCKET_COUNT
+            features.transformed_names(configs.BUCKET_FEATURE_KEYS),
+            configs.BUCKET_FEATURE_BUCKET_COUNT
         )
     ]
     categorical_columns += [
@@ -109,8 +109,8 @@ def _build_keras_model(hidden_units, learning_rate):
             default_value=0
         )
         for key, num_buckets in zip(
-            features.transformed_names(features.CATEGORICAL_FEATURE_KEYS),
-            features.CATEGORICAL_FEATURE_MAX_VALUES
+            features.transformed_names(configs.CATEGORICAL_FEATURE_KEYS),
+            configs.CATEGORICAL_FEATURE_MAX_VALUES
         )
     ]
     indicator_column = [
@@ -141,19 +141,19 @@ def _wide_and_deep_classifier(wide_columns, deep_columns, dnn_hidden_units, lear
     # Keras needs the feature definitions at compile time.
     input_layers = {
         colname: tf.keras.layers.Input(name=colname, shape=(), dtype=tf.float32)
-        for colname in features.transformed_names(features.DENSE_FLOAT_FEATURE_KEYS)
+        for colname in features.transformed_names(configs.DENSE_FLOAT_FEATURE_KEYS)
     }
     input_layers.update({
         colname: tf.keras.layers.Input(name=colname, shape=(), dtype='int32')
-        for colname in features.transformed_names(features.VOCAB_FEATURE_KEYS)
+        for colname in features.transformed_names(configs.VOCAB_FEATURE_KEYS)
     })
     input_layers.update({
         colname: tf.keras.layers.Input(name=colname, shape=(), dtype='int32')
-        for colname in features.transformed_names(features.BUCKET_FEATURE_KEYS)
+        for colname in features.transformed_names(configs.BUCKET_FEATURE_KEYS)
     })
     input_layers.update({
         colname: tf.keras.layers.Input(name=colname, shape=(), dtype='int32')
-        for colname in features.transformed_names(features.CATEGORICAL_FEATURE_KEYS)
+        for colname in features.transformed_names(configs.CATEGORICAL_FEATURE_KEYS)
     })
 
     # Keras preprocessing layers.
@@ -185,13 +185,13 @@ def run_fn(fn_args):
     tf_transform_output = tft.TFTransformOutput(fn_args.transform_output)
 
     train_dataset = _input_fn(
-        fn_args.train_files, fn_args.data_accessor, tf_transform_output, constants.TRAIN_BATCH_SIZE)
+        fn_args.train_files, fn_args.data_accessor, tf_transform_output, configs.TRAIN_BATCH_SIZE)
     eval_dataset = _input_fn(
-        fn_args.eval_files, fn_args.data_accessor, tf_transform_output, constants.EVAL_BATCH_SIZE)
+        fn_args.eval_files, fn_args.data_accessor, tf_transform_output, configs.EVAL_BATCH_SIZE)
 
     mirrored_strategy = tf.distribute.MirroredStrategy()
     with mirrored_strategy.scope():
-        model = _build_keras_model(hidden_units=constants.HIDDEN_UNITS, learning_rate=constants.LEARNING_RATE)
+        model = _build_keras_model(hidden_units=configs.HIDDEN_UNITS, learning_rate=configs.LEARNING_RATE)
 
     # Write logs to path
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=fn_args.model_run_dir, update_freq='batch')

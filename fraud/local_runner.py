@@ -4,7 +4,7 @@ import os
 from absl import logging
 
 from tfx import v1 as tfx
-from pipeline import configs
+import configs
 from pipeline import pipeline
 
 # TFX produces two types of outputs, files and metadata.

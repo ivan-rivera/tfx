@@ -6,7 +6,8 @@ This file defines a template for TFX Transform component.
 import tensorflow as tf
 import tensorflow_transform as tft
 
-from fraud.models import features
+from models import features
+import configs
 
 
 def _fill_in_missing(x):
@@ -44,24 +45,24 @@ def preprocessing_fn(inputs):
         Map from string feature key to transformed feature operations.
     """
     outputs = {}
-    for key in features.DENSE_FLOAT_FEATURE_KEYS:
+    for key in configs.DENSE_FLOAT_FEATURE_KEYS:
         # Preserve this feature as a dense float, setting nan's to the mean.
         outputs[features.transformed_name(key)] = tft.scale_to_z_score(_fill_in_missing(inputs[key]))
 
-    for key in features.VOCAB_FEATURE_KEYS:
+    for key in configs.VOCAB_FEATURE_KEYS:
         # Build a vocabulary for this feature.
         outputs[features.transformed_name(key)] = tft.compute_and_apply_vocabulary(
             _fill_in_missing(inputs[key]),
-            top_k=features.VOCAB_SIZE,
-            num_oov_buckets=features.OOV_SIZE
+            top_k=configs.VOCAB_SIZE,
+            num_oov_buckets=configs.OOV_SIZE,
         )
 
-    for key, num_buckets in zip(features.BUCKET_FEATURE_KEYS, features.BUCKET_FEATURE_BUCKET_COUNT):
+    for key, num_buckets in zip(configs.BUCKET_FEATURE_KEYS, configs.BUCKET_FEATURE_BUCKET_COUNT):
         outputs[features.transformed_name(key)] = tft.bucketize(_fill_in_missing(inputs[key]), num_buckets)
 
-    for key in features.CATEGORICAL_FEATURE_KEYS:
+    for key in configs.CATEGORICAL_FEATURE_KEYS:
         outputs[features.transformed_name(key)] = _fill_in_missing(inputs[key])
 
-    outputs[features.transformed_name(features.LABEL_KEY)] = _fill_in_missing(inputs[features.LABEL_KEY])
+    outputs[features.transformed_name(configs.LABEL_KEY)] = _fill_in_missing(inputs[configs.LABEL_KEY])
 
     return outputs

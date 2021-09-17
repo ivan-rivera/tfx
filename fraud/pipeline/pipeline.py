@@ -2,8 +2,11 @@
 
 from typing import List, Optional, Text
 
+import configs
 import tensorflow_model_analysis as tfma
+from google.protobuf.wrappers_pb2 import BoolValue
 from ml_metadata.proto import metadata_store_pb2
+from tensorflow_model_analysis import Options
 from tfx import v1 as tfx
 
 
@@ -64,13 +67,14 @@ def create_pipeline(
     # Uses TFMA to compute a evaluation statistics over features of a model and
     # perform quality validation of a candidate model (compared to a baseline).
     eval_config = tfma.EvalConfig(
+        options=Options(include_default_metrics=BoolValue(value=True)),
         model_specs=[
             tfma.ModelSpec(
                 signature_name='serving_default',
-                label_key='target_xf',
+                label_key=f'{configs.LABEL_KEY}_xf',
                 preprocessing_function_names=['transform_features'])
         ],
-        slicing_specs=[tfma.SlicingSpec()],
+        slicing_specs=[tfma.SlicingSpec(feature_keys=[spec]) for spec in configs.SLICE_BY],
         metrics_specs=[
             tfma.MetricsSpec(metrics=[
                 tfma.MetricConfig(
@@ -94,8 +98,8 @@ def create_pipeline(
     # to a file destination if check passed.
     pusher_args = {'model': trainer.outputs['model'], 'model_blessing': evaluator.outputs['blessing'],
                    'push_destination': tfx.proto.PushDestination(
-                       filesystem=tfx.proto.PushDestination.Filesystem(
-                           base_directory=serving_model_dir))}
+                       filesystem=tfx.proto.PushDestination.Filesystem(base_directory=serving_model_dir)
+                   )}
     pusher = tfx.components.Pusher(**pusher_args)  # pylint: disable=unused-variable
     components.append(pusher)
 

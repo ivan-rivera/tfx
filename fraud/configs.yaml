@@ -1,0 +1,29 @@
+meta:
+  pipeline_name: fraud
+  preprocessing_fn: models.preprocessing.preprocessing_fn
+  run_fn: models.keras_model.model.run_fn
+features:
+  slice_by:
+    - CNT_CHILDREN
+  label: TARGET
+  dense:
+    - AMT_CREDIT
+    - CNT_CHILDREN
+  bucket:
+    AMT_INCOME_TOTAL: 10
+  categorical:
+    FLAG_MOBIL: 2
+  vocab:
+    - NAME_TYPE_SUITE
+  vocab_size: 1000
+  vocab_oov: 0
+model:
+  hidden_units: [16, 8]
+  learning_rate: 0.001
+  steps:
+    train: 1000
+    eval: 150
+  batch_size:
+    train: 40
+    eval: 40
+  eval_accuracy_threshold: 0.6

@@ -23,3 +23,11 @@ Here is a list of relevant TFX resources that were used for this exercise:
 
 * [Building TFX Pipeline Locally](https://www.tensorflow.org/tfx/guide/build_local_pipeline)
 * [Create a TFX pipeline using templates with local orchestrator - Colab Notebook](https://colab.research.google.com/github/tensorflow/tfx/blob/master/docs/tutorials/tfx/template_local.ipynb)
+
+## How to get it working
+* clone
+* download `application_data.csv` from Kaggle to the top-level `data/` directory
+* run `make sample_data`
+* run `make create_pipeline`
+* run `make update_and_run`
+* Check out the notebooks (work in progress)
