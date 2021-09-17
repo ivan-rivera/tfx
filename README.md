@@ -30,6 +30,7 @@ Here is a list of relevant TFX resources that were used for this exercise:
 * run `make sample_data`
 * run `make create_pipeline`
 * run `make update_and_run`
+* run `make tensorboard` to check out the training logs
 * Check out the notebooks (work in progress)
 
 # TODO:
