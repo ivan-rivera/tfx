@@ -83,7 +83,7 @@ def _build_keras_model(hidden_units, learning_rate):
         tf.feature_column.numeric_column(key, shape=())
         for key in features.transformed_names(configs.DENSE_FLOAT_FEATURE_KEYS)
     ]
-    categorical_columns = [
+    embedded_columns = [
         tf.feature_column.categorical_column_with_identity(  # pylint: disable=g-complex-comprehension
             key,
             num_buckets=configs.VOCAB_SIZE + configs.OOV_SIZE,
@@ -91,7 +91,7 @@ def _build_keras_model(hidden_units, learning_rate):
         )
         for key in features.transformed_names(configs.VOCAB_FEATURE_KEYS)
     ]
-    categorical_columns += [
+    categorical_columns = [
         tf.feature_column.categorical_column_with_identity(  # pylint: disable=g-complex-comprehension
             key,
             num_buckets=num_buckets,
@@ -117,9 +117,13 @@ def _build_keras_model(hidden_units, learning_rate):
         tf.feature_column.indicator_column(categorical_column)
         for categorical_column in categorical_columns
     ]
+    embedding_column = [
+        tf.feature_column.embedding_column(embedding_column, 10)  # TODO: clean up dimension declaration
+        for embedding_column in embedded_columns
+    ]
 
     model = _wide_and_deep_classifier(
-        wide_columns=indicator_column,
+        wide_columns=indicator_column + embedding_column,
         deep_columns=real_valued_columns,
         dnn_hidden_units=hidden_units,
         learning_rate=learning_rate)
@@ -194,7 +198,7 @@ def run_fn(fn_args):
         model = _build_keras_model(hidden_units=configs.HIDDEN_UNITS, learning_rate=configs.LEARNING_RATE)
 
     # Write logs to path
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=fn_args.model_run_dir, update_freq='batch')
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=configs.TENSORBOARD_LOG_DIR, update_freq='batch')
 
     model.fit(
         train_dataset,

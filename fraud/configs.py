@@ -22,6 +22,9 @@ RUN_FN = conf['meta']['run_fn']
 TRAIN_NUM_STEPS = conf['model']['steps']['train']
 EVAL_NUM_STEPS = conf['model']['steps']['eval']
 
+# tensorboard logs directory
+TENSORBOARD_LOG_DIR = OUTPUT_DIR + '/tensorboard'
+
 # lowest evaluation threshold
 EVAL_ACCURACY_THRESHOLD = conf['model']['eval_accuracy_threshold']
 

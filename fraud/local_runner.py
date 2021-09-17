@@ -37,8 +37,7 @@ def run():
             eval_args=tfx.proto.EvalArgs(num_steps=configs.EVAL_NUM_STEPS),
             eval_accuracy_threshold=configs.EVAL_ACCURACY_THRESHOLD,
             serving_model_dir=SERVING_MODEL_DIR,
-            metadata_connection_config=tfx.orchestration.metadata
-                .sqlite_metadata_connection_config(METADATA_PATH)))
+            metadata_connection_config=tfx.orchestration.metadata.sqlite_metadata_connection_config(METADATA_PATH)))
 
 
 if __name__ == '__main__':

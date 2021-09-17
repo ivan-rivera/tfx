@@ -31,3 +31,9 @@ Here is a list of relevant TFX resources that were used for this exercise:
 * run `make create_pipeline`
 * run `make update_and_run`
 * Check out the notebooks (work in progress)
+
+# TODO:
+* Investigate the error `AttributeError: 'NoneType' object has no attribute '__wrapped__'`
+* Investigate missing features stats in the notebooks
+* Look into the train/validation split
+* Add feature weight distributions into the tensorboard

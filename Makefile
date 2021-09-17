@@ -14,4 +14,8 @@ update_pipeline:
 run_pipeline:
 	tfx run create --pipeline_name fraud
 
+.PHONY: tensorboard
+tensorboard:
+	tensorboard --logdir pipeline_outputs/tensorboard
+
 update_and_run: update_pipeline run_pipeline

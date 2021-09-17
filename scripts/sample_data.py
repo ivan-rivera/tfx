@@ -18,6 +18,7 @@ keep_cols = [
     'NAME_TYPE_SUITE',
     'FLAG_MOBIL',
     'CNT_CHILDREN',
+    'CODE_GENDER',
 ]
 
 
