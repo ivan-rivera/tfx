@@ -34,7 +34,14 @@ Here is a list of relevant TFX resources that were used for this exercise:
 * Check out the notebooks (work in progress)
 
 # TODO:
+* Simplify
+* Work out where run_args are getting set
 * Investigate the error `AttributeError: 'NoneType' object has no attribute '__wrapped__'`
 * Investigate missing features stats in the notebooks
 * Look into the train/validation split
-* Add feature weight distributions into the tensorboard
+* Set `preprocessing_fn` in a notebook for exploration
+* Either print or output model diagram
+* Find a way to visualise the pipeline (kubeflow style)
+* Add feature weight distributions into the tensorboard (+ play around with TF board)
+* Add a resolver to fetch the most recent blessed model to be used in the evaluation
+* Explore the inner workings of TFX
