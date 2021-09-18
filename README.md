@@ -44,4 +44,6 @@ Here is a list of relevant TFX resources that were used for this exercise:
 * Find a way to visualise the pipeline (kubeflow style)
 * Add feature weight distributions into the tensorboard (+ play around with TF board)
 * Add a resolver to fetch the most recent blessed model to be used in the evaluation
-* Explore the inner workings of TFX
+* Get tests working
+* Get more familiar with Beam (and TFT Beam)
+* Add some custom pre-processing logic
