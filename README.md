@@ -33,7 +33,7 @@ Here is a list of relevant TFX resources that were used for this exercise:
 * run `make tensorboard` to check out the training logs
 * Check out the notebooks (work in progress)
 
-# TODO:
+## TODO:
 * Simplify
 * Work out where run_args are getting set
 * Investigate the error `AttributeError: 'NoneType' object has no attribute '__wrapped__'`
