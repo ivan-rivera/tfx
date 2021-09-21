@@ -1,0 +1,30 @@
+meta:
+  pipeline_name: fraud
+  preprocessing_fn: preprocessing.preprocessing_fn
+  run_fn: estimators.wide_and_deep.run_fn
+features:
+  label:  # what we are predicting
+    TARGET
+  slice_by:  # we will get evaluation stats broken down by these features
+    - CNT_CHILDREN
+  dense:  # numeric features
+    - AMT_CREDIT
+    - CNT_CHILDREN
+  bucketed:  # numeric features that will be quantized into N buckets and
+    AMT_INCOME_TOTAL: 10
+  one_hot_encoded:  # one-hot-encoded features (with their respective cardinalities)
+    FLAG_MOBIL: 2
+  embedded:  # columns to embed with their cardinalities and the desired embedding dimensionality
+    NAME_TYPE_SUITE:
+      cardinality: 1000
+      embedding: 10
+model:
+  hidden_units: [16, 8]
+  learning_rate: 0.001
+  steps:
+    train: 1000
+    eval: 150
+  batch_size:
+    train: 40
+    eval: 40
+  eval_accuracy_threshold: 0.6

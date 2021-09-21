@@ -38,7 +38,6 @@ Here is a list of relevant TFX resources that were used for this exercise:
 Note that with every run you are accumulating output data.
 
 ## TODO:
-* Simplify
 * Switch away from feature columns to keras preprocessing
 * Work out where run_args are getting set
 * Investigate the error `AttributeError: 'NoneType' object has no attribute '__wrapped__'`

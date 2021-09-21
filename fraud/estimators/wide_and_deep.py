@@ -1,19 +1,22 @@
-"""TFX template taxi model.
-
-A DNN keras model which uses features defined in features.py and network
-parameters defined in constants.py.
 """
+A DNN keras model
+"""
+from typing import List, Union, Dict, Any
+
+from keras import Model
+from tensorflow_transform import TFTransformOutput
+from tfx.components.trainer.fn_args_utils import DataAccessor
 
 import configs
 from absl import logging
 import tensorflow as tf
 import tensorflow_transform as tft
 
-from models import features
+import features
 from tfx_bsl.public import tfxio
 
 
-def _get_tf_examples_serving_signature(model, tf_transform_output):
+def _get_tf_examples_serving_signature(model: Model, tf_transform_output: TFTransformOutput):
     """Returns a serving signature that accepts `tensorflow.Example`."""
     # We need to track the layers in the model in order to save it.
     model.tft_layer_inference = tf_transform_output.transform_features_layer()
@@ -33,7 +36,7 @@ def _get_tf_examples_serving_signature(model, tf_transform_output):
     return serve_tf_examples_fn
 
 
-def _get_transform_features_signature(model, tf_transform_output):
+def _get_transform_features_signature(model: Model, tf_transform_output: TFTransformOutput):
     """Returns a serving signature that applies tf.Transform to features."""
     model.tft_layer_eval = tf_transform_output.transform_features_layer()
 
@@ -49,14 +52,18 @@ def _get_transform_features_signature(model, tf_transform_output):
     return transform_features_fn
 
 
-def _input_fn(file_pattern, data_accessor, tf_transform_output, batch_size=200):
+def _input_fn(
+        file_pattern: List[str],
+        data_accessor: DataAccessor,
+        tf_transform_output: TFTransformOutput,
+        batch_size: int = 200
+):
     """Generates features and label for tuning/training.
       Args:
         file_pattern: List of paths or patterns of input tfrecord files.
         data_accessor: DataAccessor for converting input to RecordBatch.
         tf_transform_output: A TFTransformOutput.
-        batch_size: representing the number of consecutive elements of returned
-          dataset to combine in a single batch
+        batch_size: representing the number of consecutive elements of returned dataset to combine in a single batch
       Returns:
         A dataset that contains (features, indices) tuple where features is a
           dictionary of Tensors, and indices is a single Tensor of label indices.
@@ -71,63 +78,20 @@ def _input_fn(file_pattern, data_accessor, tf_transform_output, batch_size=200):
     ).repeat()
 
 
-def _build_keras_model(hidden_units, learning_rate):
+def _build_model(hidden_units: Union[int, List[int]], learning_rate: float):
     """Creates a DNN Keras model for classifying taxi data.
       Args:
-        hidden_units: [int], the layer sizes of the DNN (input layer first).
+        hidden_units: the layer sizes of the DNN (input layer first).
         learning_rate: [float], learning rate of the Adam optimizer.
       Returns:
         A keras Model.
     """
-    real_valued_columns = [
-        tf.feature_column.numeric_column(key, shape=())
-        for key in features.transformed_names(configs.DENSE_FLOAT_FEATURE_KEYS)
-    ]
-    embedded_columns = [
-        tf.feature_column.categorical_column_with_identity(  # pylint: disable=g-complex-comprehension
-            key,
-            num_buckets=configs.VOCAB_SIZE + configs.OOV_SIZE,
-            default_value=0
-        )
-        for key in features.transformed_names(configs.VOCAB_FEATURE_KEYS)
-    ]
-    categorical_columns = [
-        tf.feature_column.categorical_column_with_identity(  # pylint: disable=g-complex-comprehension
-            key,
-            num_buckets=num_buckets,
-            default_value=0
-        )
-        for key, num_buckets in zip(
-            features.transformed_names(configs.BUCKET_FEATURE_KEYS),
-            configs.BUCKET_FEATURE_BUCKET_COUNT
-        )
-    ]
-    categorical_columns += [
-        tf.feature_column.categorical_column_with_identity(  # pylint: disable=g-complex-comprehension
-            key,
-            num_buckets=num_buckets,
-            default_value=0
-        )
-        for key, num_buckets in zip(
-            features.transformed_names(configs.CATEGORICAL_FEATURE_KEYS),
-            configs.CATEGORICAL_FEATURE_MAX_VALUES
-        )
-    ]
-    indicator_column = [
-        tf.feature_column.indicator_column(categorical_column)
-        for categorical_column in categorical_columns
-    ]
-    embedding_column = [
-        tf.feature_column.embedding_column(embedding_column, 10)  # TODO: clean up dimension declaration
-        for embedding_column in embedded_columns
-    ]
-
-    model = _wide_and_deep_classifier(
-        wide_columns=indicator_column + embedding_column,
-        deep_columns=real_valued_columns,
+    return _wide_and_deep_classifier(
+        wide_columns=features.indicator_columns,
+        deep_columns=features.real_valued_columns + features.embedding_columns,
         dnn_hidden_units=hidden_units,
-        learning_rate=learning_rate)
-    return model
+        learning_rate=learning_rate
+    )
 
 
 def _wide_and_deep_classifier(wide_columns, deep_columns, dnn_hidden_units, learning_rate):
@@ -143,22 +107,18 @@ def _wide_and_deep_classifier(wide_columns, deep_columns, dnn_hidden_units, lear
         A Wide and Deep Keras model
     """
     # Keras needs the feature definitions at compile time.
-    input_layers = {
+    float_layers = {
         colname: tf.keras.layers.Input(name=colname, shape=(), dtype=tf.float32)
         for colname in features.transformed_names(configs.DENSE_FLOAT_FEATURE_KEYS)
     }
-    input_layers.update({
+    int_layers = {
         colname: tf.keras.layers.Input(name=colname, shape=(), dtype='int32')
-        for colname in features.transformed_names(configs.VOCAB_FEATURE_KEYS)
-    })
-    input_layers.update({
-        colname: tf.keras.layers.Input(name=colname, shape=(), dtype='int32')
-        for colname in features.transformed_names(configs.BUCKET_FEATURE_KEYS)
-    })
-    input_layers.update({
-        colname: tf.keras.layers.Input(name=colname, shape=(), dtype='int32')
-        for colname in features.transformed_names(configs.CATEGORICAL_FEATURE_KEYS)
-    })
+        for colname in
+        features.transformed_names(configs.EMBED_FEATURE_KEYS) +
+        features.transformed_names(configs.BUCKET_FEATURE_KEYS) +
+        features.transformed_names(configs.OHE_FEATURE_KEYS)
+    }
+    input_layers = {**float_layers, **int_layers}
 
     # Keras preprocessing layers.
     deep = tf.keras.layers.DenseFeatures(deep_columns)(input_layers)
@@ -185,21 +145,15 @@ def run_fn(fn_args):
     Args:
         fn_args: Holds args used to train the model as name/value pairs.
     """
-
     tf_transform_output = tft.TFTransformOutput(fn_args.transform_output)
-
-    train_dataset = _input_fn(
-        fn_args.train_files, fn_args.data_accessor, tf_transform_output, configs.TRAIN_BATCH_SIZE)
-    eval_dataset = _input_fn(
-        fn_args.eval_files, fn_args.data_accessor, tf_transform_output, configs.EVAL_BATCH_SIZE)
-
+    train_dataset = _input_fn(fn_args.train_files, fn_args.data_accessor, tf_transform_output, configs.TRAIN_BATCH_SIZE)
+    eval_dataset = _input_fn(fn_args.eval_files, fn_args.data_accessor, tf_transform_output, configs.EVAL_BATCH_SIZE)
     mirrored_strategy = tf.distribute.MirroredStrategy()
     with mirrored_strategy.scope():
-        model = _build_keras_model(hidden_units=configs.HIDDEN_UNITS, learning_rate=configs.LEARNING_RATE)
+        model = _build_model(hidden_units=configs.HIDDEN_UNITS, learning_rate=configs.LEARNING_RATE)
 
     # Write logs to path
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=configs.TENSORBOARD_LOG_DIR, update_freq='batch')
-
     model.fit(
         train_dataset,
         steps_per_epoch=fn_args.train_steps,

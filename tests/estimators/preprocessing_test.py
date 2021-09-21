@@ -1,3 +1,4 @@
+# Lint as: python2, python3
 # Copyright 2020 Google LLC. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,20 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import tensorflow as tf
 
-from models.keras_model import model
+import preprocessing
 
 
-class ModelTest(tf.test.TestCase):
+class PreprocessingTest(tf.test.TestCase):
 
-  def testBuildKerasModel(self):
-    built_model = model._build_keras_model(
-        hidden_units=[1, 1], learning_rate=0.1)  # pylint: disable=protected-access
-    self.assertEqual(len(built_model.layers), 10)
-
-    built_model = model._build_keras_model(hidden_units=[1], learning_rate=0.1)  # pylint: disable=protected-access
-    self.assertEqual(len(built_model.layers), 9)
+  def testPreprocessingFn(self):
+    self.assertTrue(callable(preprocessing.preprocessing_fn))
 
 
 if __name__ == '__main__':
