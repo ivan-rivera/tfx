@@ -87,12 +87,11 @@ def create_pipeline(
         slicing_specs=[tfma.SlicingSpec()] + [tfma.SlicingSpec(feature_keys=[spec]) for spec in configs.SLICE_BY],
         metrics_specs=[
             tfma.MetricsSpec(metrics=[
+                tfma.MetricConfig(class_name='ExampleCount'),
                 tfma.MetricConfig(
                     class_name='AUC',
                     threshold=tfma.MetricThreshold(
-                        value_threshold=tfma.GenericValueThreshold(
-                            lower_bound={'value': eval_accuracy_threshold}
-                        ),
+                        value_threshold=tfma.GenericValueThreshold(lower_bound={'value': eval_accuracy_threshold}),
                         change_threshold=tfma.GenericChangeThreshold(
                             direction=tfma.MetricDirection.HIGHER_IS_BETTER,
                             absolute={'value': -1e-10})

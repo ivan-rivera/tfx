@@ -39,17 +39,9 @@ Here is a list of relevant TFX resources that were used for this exercise:
 Note that with every run you are accumulating output data.
 
 ## TODO:
-* Switch away from feature columns to keras preprocessing
-* Work out where run_args are getting set
 * Work out how to read TB graphs and distributions
-* Investigate missing features stats in the notebooks
 * Either print or output model diagram
-* Find a way to visualise the pipeline (kubeflow style)
-* Add feature weight distributions into the tensorboard (+ play around with TF board)
-* Add a resolver to fetch the most recent blessed model to be used in the evaluation
-* Get tests working
-* Add a non-keras-based estimator
 * Batch score
-* Add some custom pre-processing logic
+* Switch away from feature columns to keras preprocessing
 * Add a custom component
-* Refactor and make it tidy
+* Get tests working
