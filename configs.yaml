@@ -21,10 +21,11 @@ features:
 model:
   hidden_units: [16, 8]
   learning_rate: 0.001
+  epochs: 50
   steps:
-    train: 1000
-    eval: 150
+    train: 100
+    eval: 50
   batch_size:
-    train: 40
-    eval: 40
-  eval_accuracy_threshold: 0.6
+    train: 250
+    eval: 250
+  eval_accuracy_threshold: 0.5

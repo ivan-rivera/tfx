@@ -21,7 +21,7 @@ RUN_FN = conf['meta']['run_fn']
 # model training
 TRAIN_NUM_STEPS = conf['model']['steps']['train']
 EVAL_NUM_STEPS = conf['model']['steps']['eval']
-
+MODEL_EPOCHS = conf['model']['epochs']
 # tensorboard logs directory
 TENSORBOARD_LOG_DIR = OUTPUT_DIR + '/tensorboard'
 
