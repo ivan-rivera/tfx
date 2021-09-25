@@ -133,7 +133,10 @@ def _wide_and_deep_classifier(wide_columns, deep_columns, dnn_hidden_units, lear
     model.compile(
         loss='binary_crossentropy',
         optimizer=tf.keras.optimizers.Adam(lr=learning_rate),
-        metrics=[tf.keras.metrics.BinaryAccuracy()]
+        metrics=[
+            tf.keras.metrics.BinaryAccuracy(),
+            tf.keras.metrics.AUC(),
+        ]
     )
     model.summary(print_fn=logging.info)
     return model
@@ -153,13 +156,22 @@ def run_fn(fn_args):
         model = _build_model(hidden_units=configs.HIDDEN_UNITS, learning_rate=configs.LEARNING_RATE)
 
     # Write logs to path
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=configs.TENSORBOARD_LOG_DIR, update_freq='batch')
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(
+        log_dir=configs.TENSORBOARD_LOG_DIR,
+        histogram_freq=1,
+        write_images=False,
+        write_graph=False,
+        update_freq='batch',
+
+    )
+
     model.fit(
         train_dataset,
+        epochs=configs.MODEL_EPOCHS,
         steps_per_epoch=fn_args.train_steps,
         validation_data=eval_dataset,
         validation_steps=fn_args.eval_steps,
-        callbacks=[tensorboard_callback]
+        callbacks=[tensorboard_callback],
     )
 
     signatures = {
