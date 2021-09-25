@@ -32,7 +32,10 @@ def create_pipeline(
     components.append(example_gen)
 
     # Computes statistics over data for visualization and example validation.
-    statistics_gen = tfx.components.StatisticsGen(examples=example_gen.outputs['examples'])
+    statistics_gen = tfx.components.StatisticsGen(
+        examples=example_gen.outputs['examples'],
+        exclude_splits=None
+    )
     components.append(statistics_gen)
 
     # Generates schema based on statistics files.
@@ -64,6 +67,13 @@ def create_pipeline(
     trainer = tfx.components.Trainer(**trainer_args)
     components.append(trainer)
 
+    resolver = tfx.dsl.Resolver(
+        strategy_class=tfx.dsl.experimental.LatestBlessedModelStrategy,
+        model=tfx.dsl.Channel(type=tfx.types.standard_artifacts.Model),
+        model_blessing=tfx.dsl.Channel(type=tfx.types.standard_artifacts.ModelBlessing),
+    ).with_id('latest_blessed_model_resolver')
+    components.append(resolver)
+
     # Uses TFMA to compute a evaluation statistics over features of a model and
     # perform quality validation of a candidate model (compared to a baseline).
     eval_config = tfma.EvalConfig(
@@ -74,23 +84,25 @@ def create_pipeline(
                 label_key=f'{configs.LABEL_KEY}_xf',
                 preprocessing_function_names=['transform_features'])
         ],
-        slicing_specs=[tfma.SlicingSpec(feature_keys=[spec]) for spec in configs.SLICE_BY],
+        slicing_specs=[tfma.SlicingSpec()] + [tfma.SlicingSpec(feature_keys=[spec]) for spec in configs.SLICE_BY],
         metrics_specs=[
             tfma.MetricsSpec(metrics=[
                 tfma.MetricConfig(
-                    class_name='BinaryAccuracy',
+                    class_name='AUC',
                     threshold=tfma.MetricThreshold(
                         value_threshold=tfma.GenericValueThreshold(
-                            lower_bound={'value': eval_accuracy_threshold}),
+                            lower_bound={'value': eval_accuracy_threshold}
+                        ),
                         change_threshold=tfma.GenericChangeThreshold(
                             direction=tfma.MetricDirection.HIGHER_IS_BETTER,
-                            absolute={'value': -1e-10})))
+                            absolute={'value': -1e-10})
+                    ))
             ])
         ])
     evaluator = tfx.components.Evaluator(
         examples=example_gen.outputs['examples'],
         model=trainer.outputs['model'],
-        baseline_model=None,
+        baseline_model=resolver.outputs['model'],
         eval_config=eval_config)
     components.append(evaluator)
 
