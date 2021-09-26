@@ -6,26 +6,37 @@ features:
   label:  # what we are predicting
     TARGET
   slice_by:  # we will get evaluation stats broken down by these features
-    - CNT_CHILDREN
+    - CODE_GENDER
   dense:  # numeric features
     - AMT_CREDIT
     - CNT_CHILDREN
+    - DAYS_EMPLOYED
+    - DAYS_BIRTH
+    - OWN_CAR_AGE
   bucketed:  # numeric features that will be quantized into N buckets and
     AMT_INCOME_TOTAL: 10
   one_hot_encoded:  # one-hot-encoded features (with their respective cardinalities)
     FLAG_MOBIL: 2
+    FLAG_OWN_CAR: 2
+    FLAG_OWN_REALTY: 2
   embedded:  # columns to embed with their cardinalities and the desired embedding dimensionality
     NAME_TYPE_SUITE:
-      cardinality: 1000
+      cardinality: 10000
       embedding: 10
+    OCCUPATION_TYPE:
+      cardinality: 10000
+      embedding: 50
+    ORGANIZATION_TYPE:
+      cardinality: 10000
+      embedding: 50
 model:
-  hidden_units: [16, 8]
+  hidden_units: [32, 8]
   learning_rate: 0.001
-  epochs: 50
+  epochs: 20
   steps:
-    train: 100
-    eval: 50
+    train: 50
+    eval: 500
   batch_size:
-    train: 250
-    eval: 250
+    train: 1000
+    eval: 500
   eval_accuracy_threshold: 0.5

@@ -1,19 +1,18 @@
 """
 A DNN keras model
 """
-from typing import List, Union, Dict, Any
+from typing import List, Union
 
+import tensorflow as tf
+import tensorflow_transform as tft
+from absl import logging
 from keras import Model
 from tensorflow_transform import TFTransformOutput
 from tfx.components.trainer.fn_args_utils import DataAccessor
+from tfx_bsl.public import tfxio
 
 import configs
-from absl import logging
-import tensorflow as tf
-import tensorflow_transform as tft
-
 import features
-from tfx_bsl.public import tfxio
 
 
 def _get_tf_examples_serving_signature(model: Model, tf_transform_output: TFTransformOutput):
@@ -87,8 +86,8 @@ def _build_model(hidden_units: Union[int, List[int]], learning_rate: float):
         A keras Model.
     """
     return _wide_and_deep_classifier(
-        wide_columns=features.indicator_columns,
-        deep_columns=features.real_valued_columns + features.embedding_columns,
+        wide_columns=features.indicator_columns + features.embedding_columns,
+        deep_columns=features.real_valued_columns,
         dnn_hidden_units=hidden_units,
         learning_rate=learning_rate
     )
@@ -123,7 +122,7 @@ def _wide_and_deep_classifier(wide_columns, deep_columns, dnn_hidden_units, lear
     # Keras preprocessing layers.
     deep = tf.keras.layers.DenseFeatures(deep_columns)(input_layers)
     for num_nodes in dnn_hidden_units:
-        deep = tf.keras.layers.Dense(num_nodes)(deep)
+        deep = tf.keras.layers.Dense(num_nodes, activation='relu')(deep)
     wide = tf.keras.layers.DenseFeatures(wide_columns)(input_layers)
 
     output = tf.keras.layers.Dense(1, activation='sigmoid')(tf.keras.layers.concatenate([deep, wide]))
@@ -132,13 +131,21 @@ def _wide_and_deep_classifier(wide_columns, deep_columns, dnn_hidden_units, lear
     model = tf.keras.Model(input_layers, output)
     model.compile(
         loss='binary_crossentropy',
-        optimizer=tf.keras.optimizers.Adam(lr=learning_rate),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
         metrics=[
             tf.keras.metrics.BinaryAccuracy(),
             tf.keras.metrics.AUC(),
         ]
     )
     model.summary(print_fn=logging.info)
+    tf.keras.utils.plot_model(
+        model,
+        to_file=configs.OUTPUT_DIR + "/model.png",
+        show_shapes=False,
+        show_dtype=False,
+        show_layer_names=False,
+        expand_nested=True,
+    )
     return model
 
 
@@ -162,7 +169,6 @@ def run_fn(fn_args):
         write_images=False,
         write_graph=False,
         update_freq='batch',
-
     )
 
     model.fit(
