@@ -33,7 +33,7 @@ def main():
     data = pd.read_csv('../data/application_data.csv', usecols=keep_cols)
     train, test = train_test_split(data.sample(n=15_000), train_size=10_000)
     train.to_csv('../fraud/data/data.csv', index=False)
-    test.to_csv('../data/test.csv', index=False)
+    test.to_csv('../data/test_data/test.csv', index=False)
 
 
 if __name__ == '__main__':
