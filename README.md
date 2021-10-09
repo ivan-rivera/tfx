@@ -40,4 +40,3 @@ Note that with every run you are accumulating output data.
 
 ## TODO:
 * Add a custom component
-* Get tests working

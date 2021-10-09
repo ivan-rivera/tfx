@@ -19,23 +19,24 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+import configs
 import features
 
 
 class FeaturesTest(tf.test.TestCase):
 
-  def testNumberOfBucketFeatureBucketCount(self):
-    self.assertEqual(
-        len(features.BUCKET_FEATURE_KEYS),
-        len(features.BUCKET_FEATURE_BUCKET_COUNT))
-    self.assertEqual(
-        len(features.CATEGORICAL_FEATURE_KEYS),
-        len(features.CATEGORICAL_FEATURE_MAX_VALUES))
+    def testNumberOfBucketFeatureBucketCount(self):
+        self.assertEqual(
+            len(configs.BUCKET_FEATURE_KEYS),
+            len(configs.BUCKET_FEATURE_BUCKET_COUNT))
+        self.assertEqual(
+            len(configs.EMBED_FEATURE_KEYS),
+            len(configs.EMBED_COL_CARDINALITY))
 
-  def testTransformedNames(self):
-    names = ["f1", "cf"]
-    self.assertEqual(["f1_xf", "cf_xf"], features.transformed_names(names))
+    def testTransformedNames(self):
+        names = ["f1", "cf"]
+        self.assertEqual(["f1_xf", "cf_xf"], features.transformed_names(names))
 
 
 if __name__ == "__main__":
-  tf.test.main()
+    tf.test.main()
