@@ -52,7 +52,7 @@ def preprocessing_fn(inputs):
     for key, num_buckets in zip(configs.EMBED_FEATURE_KEYS, configs.EMBED_COL_CARDINALITY):
         # Build a vocabulary for this feature.
         outputs[features.transformed_name(key)] = tft.compute_and_apply_vocabulary(
-            _fill_in_missing(inputs[key]), top_k=num_buckets, num_oov_buckets=0,)
+            _fill_in_missing(inputs[key]), top_k=num_buckets, num_oov_buckets=0)
 
     for key, num_buckets in zip(configs.BUCKET_FEATURE_KEYS, configs.BUCKET_FEATURE_BUCKET_COUNT):
         outputs[features.transformed_name(key)] = tft.bucketize(_fill_in_missing(inputs[key]), num_buckets)
