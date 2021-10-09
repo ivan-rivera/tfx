@@ -25,6 +25,9 @@ Here is a list of relevant TFX resources that were used for this exercise:
 * [Create a TFX pipeline using templates with local orchestrator - Colab Notebook](https://colab.research.google.com/github/tensorflow/tfx/blob/master/docs/tutorials/tfx/template_local.ipynb)
 * [TFX in interactive context](https://www.adaltas.com/en/2021/03/05/tfx-overview/)
 * [TFX in a notebook](https://notebook.community/tensorflow/tfx/tfx/examples/chicago_taxi_pipeline/taxi_pipeline_interactive)
+* [Creating a custom TFX executor](https://blog.tensorflow.org/2019/09/creating-custom-tfx-executor_19.html)
+* [Creating a custom TFX component](https://blog.tensorflow.org/2020/01/creating-custom-tfx-component.html)
+* [Example of a custom component using the Slack API](https://github.com/tensorflow/tfx/tree/master/tfx/examples/custom_components/slack)
 
 ## How to get it working
 * clone
@@ -37,6 +40,3 @@ Here is a list of relevant TFX resources that were used for this exercise:
 * Check out the notebooks (work in progress)
 
 Note that with every run you are accumulating output data.
-
-## TODO:
-* Add a custom component
