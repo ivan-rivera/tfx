@@ -39,6 +39,5 @@ Here is a list of relevant TFX resources that were used for this exercise:
 Note that with every run you are accumulating output data.
 
 ## TODO:
-* Switch away from feature columns to keras preprocessing
 * Add a custom component
 * Get tests working

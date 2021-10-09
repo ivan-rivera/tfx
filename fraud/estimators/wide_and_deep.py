@@ -3,10 +3,12 @@ A DNN keras model
 """
 from typing import List, Union
 
+import keras.layers
 import tensorflow as tf
 import tensorflow_transform as tft
 from absl import logging
 from keras import Model
+from keras.layers import Concatenate
 from tensorflow_transform import TFTransformOutput
 from tfx.components.trainer.fn_args_utils import DataAccessor
 from tfx_bsl.public import tfxio
@@ -85,47 +87,32 @@ def _build_model(hidden_units: Union[int, List[int]], learning_rate: float):
       Returns:
         A keras Model.
     """
-    return _wide_and_deep_classifier(
-        wide_columns=features.indicator_columns + features.embedding_columns,
-        deep_columns=features.real_valued_columns,
-        dnn_hidden_units=hidden_units,
-        learning_rate=learning_rate
-    )
+    return _wide_and_deep_classifier(dnn_hidden_units=hidden_units, learning_rate=learning_rate)
 
 
-def _wide_and_deep_classifier(wide_columns, deep_columns, dnn_hidden_units, learning_rate):
+def _wide_and_deep_classifier(dnn_hidden_units, learning_rate):
     """Build a simple keras wide and deep model.
       Args:
-        wide_columns: Feature columns wrapped in indicator_column for wide (linear)
-          part of the model.
-        deep_columns: Feature columns for deep part of the model.
-        dnn_hidden_units: [int], the layer sizes of the hidden DNN.
-        learning_rate: [float], learning rate of the Adam optimizer.
-
+        dnn_hidden_units: [int], the layer sizes of the hidden DNN
+        learning_rate: [float], learning rate of the Adam optimizer
       Returns:
         A Wide and Deep Keras model
     """
-    # Keras needs the feature definitions at compile time.
-    float_layers = {
-        colname: tf.keras.layers.Input(name=colname, shape=(), dtype=tf.float32)
-        for colname in features.transformed_names(configs.DENSE_FLOAT_FEATURE_KEYS)
+    real_valued_columns = features.get_real_valued_columns()
+    indicator_columns = features.get_indicator_columns()
+    embedded_columns = features.get_embedded_columns()
+    input_layers = {
+        **real_valued_columns["inputs"],
+        **indicator_columns["inputs"],
+        **embedded_columns["inputs"]
     }
-    int_layers = {
-        colname: tf.keras.layers.Input(name=colname, shape=(), dtype='int32')
-        for colname in
-        features.transformed_names(configs.EMBED_FEATURE_KEYS) +
-        features.transformed_names(configs.BUCKET_FEATURE_KEYS) +
-        features.transformed_names(configs.OHE_FEATURE_KEYS)
-    }
-    input_layers = {**float_layers, **int_layers}
 
-    # Keras preprocessing layers.
-    deep = tf.keras.layers.DenseFeatures(deep_columns)(input_layers)
+    deep = Concatenate()(real_valued_columns["processed"])
     for num_nodes in dnn_hidden_units:
         deep = tf.keras.layers.Dense(num_nodes, activation='relu')(deep)
-    wide = tf.keras.layers.DenseFeatures(wide_columns)(input_layers)
-
-    output = tf.keras.layers.Dense(1, activation='sigmoid')(tf.keras.layers.concatenate([deep, wide]))
+    wide = Concatenate()(embedded_columns["processed"] + indicator_columns["processed"])
+    merge = Concatenate()([wide, deep])
+    output = keras.layers.Dense(1, activation="sigmoid")(merge)
     output = tf.squeeze(output, -1)
 
     model = tf.keras.Model(input_layers, output)
